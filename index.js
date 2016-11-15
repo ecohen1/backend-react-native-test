@@ -37,7 +37,8 @@ app
         lng:lng
     });
     newGeo.save(function(err,data){
-        if (err){console.log(err)}   
+        if (err){res.send(err)}
+        else {res.send(data)}
     });
 });
 
