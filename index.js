@@ -34,7 +34,7 @@ app
     newGeo = new Geo({
         name:name,
         lat:lat,
-        lng:lng
+        long:lng
     });
     newGeo.save(function(err,data){
         if (err){res.send(err)}
