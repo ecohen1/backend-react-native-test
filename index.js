@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 3000;
+var bodyParser = require("body-parser");
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://react-native:react-native@ds153637.mlab.com:53637/react-native');
 
@@ -11,7 +12,10 @@ var geoSchema = new mongoose.Schema({
 });
 var Geo = mongoose.model('Geo',geoSchema);
 
-app.use(express.bodyParser());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json());
 
 app
 .get('/',function(req,res){
