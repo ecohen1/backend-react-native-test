@@ -31,14 +31,22 @@ app
     name = req.body.name;
     lat = req.body.lat;
     lng = req.body.lng;
-    newGeo = new Geo({
-        name:name,
-        lat:lat,
-        long:lng
-    });
-    newGeo.save(function(err,data){
-        if (err){res.send(err)}
-        else {res.send(data)}
+    Geo.findOne({"name":name},function(err,res){
+        if (!err){
+            res.lat = lat;
+            res.long = long;
+        }
+        else {
+            newGeo = new Geo({
+                name:name,
+                lat:lat,
+                long:lng
+            });
+            newGeo.save(function(err,data){
+                if (err){res.send(err)}
+                else {res.send(data)}
+            });
+        }
     });
 });
 
