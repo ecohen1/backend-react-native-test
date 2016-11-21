@@ -7,8 +7,8 @@ mongoose.connect('mongodb://react-native:react-native@ds153637.mlab.com:53637/re
 
 var geoSchema = new mongoose.Schema({
         name: String,
-            lat: Number,
-                long: Number
+        lat: Number,
+        lng: Number
 });
 var Geo = mongoose.model('Geo',geoSchema);
 
@@ -35,7 +35,7 @@ app
         console.log(data);
         if (data){
             data.lat = lat;
-            data.long = lng;
+            data.lng = lng;
             data.save(function(err,data){
                 if (err){res.send(err)}
                 else {res.send(data)}
@@ -45,7 +45,7 @@ app
             newGeo = new Geo({
                 name:name,
                 lat:lat,
-                long:lng
+                lng:lng
             });
             newGeo.save(function(err,data){
                 if (err){res.send(err)}
