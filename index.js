@@ -35,7 +35,7 @@ app
         console.log(data);
         if (data){
             data.lat = lat;
-            data.long = long;
+            data.long = lng;
             data.save(function(err,data){
                 if (err){res.send(err)}
                 else {res.send(data)}
