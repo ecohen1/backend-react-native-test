@@ -19,23 +19,23 @@ app.use(bodyParser.json());
 
 app
 .get('/',function(req,res){
-   Geo.find({},function(err,data){
-       if (!err){
-        res.send(JSON.stringify(data));
-       }else{
-        res.send("error");
-       }
+    Geo.find({},function(err,data){
+        if (!err){
+            res.send(JSON.stringify(data));
+        }else{
+            res.send("error");
+        }
     });
 })
 .post('/',function(req,res){
     name = req.body.name;
     lat = req.body.lat;
     lng = req.body.lng;
-    Geo.findOne({"name":name},function(err,res){
-        console.log(res);
-        if (res){
-            res.lat = lat;
-            res.long = long;
+    Geo.findOne({"name":name},function(err,data){
+        console.log(data);
+        if (geo){
+            geo.lat = lat;
+            geo.long = long;
         }
         else {
             newGeo = new Geo({
