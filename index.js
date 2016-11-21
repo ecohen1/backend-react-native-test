@@ -32,7 +32,8 @@ app
     lat = req.body.lat;
     lng = req.body.lng;
     Geo.findOne({"name":name},function(err,res){
-        if (!err){
+        console.log(res);
+        if (res){
             res.lat = lat;
             res.long = long;
         }
