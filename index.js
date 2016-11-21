@@ -12,6 +12,11 @@ var geoSchema = new mongoose.Schema({
 });
 var Geo = mongoose.model('Geo',geoSchema);
 
+var saveHandler = function(err,data){
+    if (err){res.send(err)}
+    else {res.send(data)}
+}
+
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -33,9 +38,10 @@ app
     lng = req.body.lng;
     Geo.findOne({"name":name},function(err,data){
         console.log(data);
-        if (geo){
-            geo.lat = lat;
-            geo.long = long;
+        if (data){
+            data.lat = lat;
+            data.long = long;
+            data.save(saveHandler);
         }
         else {
             newGeo = new Geo({
@@ -43,10 +49,7 @@ app
                 lat:lat,
                 long:lng
             });
-            newGeo.save(function(err,data){
-                if (err){res.send(err)}
-                else {res.send(data)}
-            });
+            newGeo.save(saveHandler);
         }
     });
 });
