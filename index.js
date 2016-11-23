@@ -1,58 +1,121 @@
-var express = require('express');
-var app = express();
-var port = process.env.PORT || 3000;
+var express = require("express");
+var path = require("path");
 var bodyParser = require("body-parser");
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://react-native:react-native@ds153637.mlab.com:53637/react-native');
+var mongodb = require("mongodb");
+var ObjectID = mongodb.ObjectID;
 
-var geoSchema = new mongoose.Schema({
-        name: String,
-        lat: Number,
-        lng: Number
-});
-var Geo = mongoose.model('Geo',geoSchema);
+var ALLCOORDS_COLLECTION = "allCoords";
+var USERPAIRS_COLLECTION = "userPairs";
+var USERMATCHES_COLLECTION = "userMatches";
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+var app = express();
 app.use(bodyParser.json());
 
-app
-.get('/',function(req,res){
-    Geo.find({},function(err,data){
-        if (!err){
-            res.send(JSON.stringify(data));
-        }else{
-            res.send("error");
-        }
-    });
-})
-.post('/',function(req,res){
-    name = req.body.name;
-    lat = req.body.lat;
-    lng = req.body.lng;
-    Geo.findOne({"name":name},function(err,data){
-        console.log(data);
-        if (data){
-            data.lat = lat;
-            data.lng = lng;
-            data.save(function(err,data){
-                if (err){res.send(err)}
-                else {res.send(data)}
-            });
-        }
-        else {
-            newGeo = new Geo({
-                name:name,
-                lat:lat,
-                lng:lng
-            });
-            newGeo.save(function(err,data){
-                if (err){res.send(err)}
-                else {res.send(data)}
-            });
-        }
-    });
+// Create a database variable outside of the database connection callback to reuse the connection pool in your app.
+var db;
+
+// Connect to the database before starting the application server.
+mongodb.MongoClient.connect(process.env.MONGODB_URI, function (err, database) {
+  if (err) {
+    console.log(err);
+    process.exit(1);
+  }
+
+  // Save database object from the callback for reuse.
+  db = database;
+  console.log("Database connection ready");
+
+  // Initialize the app.
+  var server = app.listen(process.env.PORT || 8080, function () {
+    var port = server.address().port;
+    console.log("App now running on port", port);
+  });
 });
 
-app.listen(port);
+// Generic error handler used by all endpoints.
+function handleError(res, reason, message, code) {
+  console.log("ERROR: " + reason);
+  res.status(code || 500).json({"error": message});
+}
+
+app.get("/ping/:name", function(req, res) {
+  var name = req.params.name;
+  db.collection(USERPAIRS_COLLECTION).findOne({name:name}, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to get pairs.");
+    } else {
+      res.status(200).json({pairs:doc.pairs});
+    }
+  });
+});
+
+app.post("/ping/:name", function(req, res) {
+  var name = req.params.name;
+  var lat = req.body.lat;
+  var lng = req.body.lng;
+
+  db.collection(ALLCOORDS_COLLECTION).updateOne({name: name}, {lat:lat,lng:lng}, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to update coords");
+    } else {
+      res.status(200).json({name:name,lat:lat,lng:lng});
+    }
+  });
+});
+
+
+app.post("/pingback", function(req, res) {
+  var fromUser = req.body.fromUser;
+  var forUser = req.body.forUser;
+
+  db.collection(USERMATCHES_COLLECTION).findOne({ name:fromUser }, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to find fromUser");
+    } else {
+      var matches = doc.matches;
+      matches.push(forUser);
+      db.collection(USERMATCHES_COLLECTION).updateOne({name:fromUser}, {matches:matches}, function(err, doc) {
+        if (err) {
+          handleError(res, err.message, "Failed to add forUser to fromUser");
+        }
+      });
+    }
+  });
+  db.collection(USERMATCHES_COLLECTION).findOne({ name:forUser }, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to find forUser");
+    } else {
+      var matches = doc.matches;
+      matches.push(fromUser);
+      db.collection(USERMATCHES_COLLECTION).updateOne({name:forUser}, {matches:matches}, function(err, doc) {
+        if (err) {
+          handleError(res, err.message, "Failed to add fromUser to forUser");
+        }
+      });
+    }
+  });
+  res.status(200).json({fromUser:fromUser,forUser:forUser});
+});
+
+app.post('/users/create/:name',function(req,res) {
+  var name = req.params.name;
+  db.collection(ALLCOORDS_COLLECTION).insertOne({name:name,lat:0,lng:0}, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to make coords.");
+    } else {
+      db.collection(USERPAIRS_COLLECTION).insertOne({name:name,pairs:[]}, function(err, doc) {
+        if (err) {
+          handleError(res, err.message, "Failed to make pairs.");
+        } else {
+          db.collection(USERMATCHES_COLLECTION).insertOne({name:name,matches:[]}, function(err, doc2) {
+            if (err) {
+              handleError(res, err.message, "Failed to make matches.");
+            } else {
+              res.status(200).json({name:name,pairs:doc.pairs,matches:doc2.matches});
+            }
+          });
+        }
+      });
+    }
+  });
+});
