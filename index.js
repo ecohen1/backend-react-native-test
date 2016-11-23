@@ -39,17 +39,50 @@ function handleError(res, reason, message, code) {
   res.status(code || 500).json({"error": message});
 }
 
+//ROUTES:
 app.get("/ping/:name", function(req, res) {
   var name = req.params.name;
-  db.collection(USERPAIRS_COLLECTION).findOne({name:name}, function(err, doc) {
+  db.collection(ALLCOORDS_COLLECTION).find({}).toArray(function(err, docs) {
     if (err) {
-      handleError(res, err.message, "Failed to get pairs.");
+      handleError(res, err.message, "Failed to get coords.");
     } else {
-      db.collection(USERMATCHES_COLLECTION).findOne({name:name}, function(err, doc2) {
+      var userCoords = {}
+      for (var i=0;i<docs.length;i++){
+        var d = docs[i];
+        if (d.name == name){
+          userCoords.lat = d.lat;
+          userCoords.lng = d.lng;
+        }
+      }
+
+      var closeUsers = [];
+      for (var i=0;i<docs.length;i++){
+        var d = docs[i];
+        if (d.name != name){
+          var distanceFromUser = Math.sqrt(Math.pow(d.lat-userCoords.lat,2)+Math.pow(d.lng-userCoords.lng,2));
+          if (distanceFromUser < Infinity){
+            closeUsers.push(d.name);
+          }
+        }
+      }
+      
+      db.collection(USERPAIRS_COLLECTION).update({name:name}, {$set: {pairs:closeUsers}}, function(err, doc) {
         if (err) {
-          handleError(res, err.message, "Failed to get matches.");
+          handleError(res, err.message, "Failed to update pairs.");
         } else {
-          res.status(200).json({name:name,pairs:doc.pairs,matches:doc2.matches});
+          db.collection(USERPAIRS_COLLECTION).findOne({name:name}, function(err, doc) {
+            if (err) {
+              handleError(res, err.message, "Failed to get pairs.");
+            } else {
+              db.collection(USERMATCHES_COLLECTION).findOne({name:name}, function(err, doc2) {
+                if (err) {
+                  handleError(res, err.message, "Failed to get matches.");
+                } else {
+                  res.status(200).json({name:name,pairs:doc.pairs,matches:doc2.matches});
+                }
+              });
+            }
+          });
         }
       });
     }
