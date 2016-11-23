@@ -44,7 +44,13 @@ app.get("/ping/:name", function(req, res) {
     if (err) {
       handleError(res, err.message, "Failed to get pairs.");
     } else {
-      res.status(200).json({pairs:doc.pairs});
+      db.collection(USERMATCHES_COLLECTION).findOne({name:name}, function(err, doc2) {
+        if (err) {
+          handleError(res, err.message, "Failed to get matches.");
+        } else {
+          res.status(200).json({name:name,pairs:doc.pairs,matches:doc2.matches});
+        }
+      });
     }
   });
 });
