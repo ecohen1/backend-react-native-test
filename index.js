@@ -61,7 +61,7 @@ app.post("/ping/:name", function(req, res) {
   var lat = req.body.lat;
   var lng = req.body.lng;
 
-  db.collection(ALLCOORDS_COLLECTION).updateOne({name: name}, {lat:lat,lng:lng}, function(err, doc) {
+  db.collection(ALLCOORDS_COLLECTION).update({name: name}, {$set: {lat:lat,lng:lng}}, function(err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to update coords");
     } else {
@@ -81,7 +81,7 @@ app.post("/pingback", function(req, res) {
     } else {
       var matches = doc.matches;
       matches.push(forUser);
-      db.collection(USERMATCHES_COLLECTION).updateOne({name:fromUser}, {matches:matches}, function(err, doc) {
+      db.collection(USERMATCHES_COLLECTION).update({name:fromUser}, {$set: {matches:matches}}, function(err, doc) {
         if (err) {
           handleError(res, err.message, "Failed to add forUser to fromUser");
         }
@@ -94,7 +94,7 @@ app.post("/pingback", function(req, res) {
     } else {
       var matches = doc.matches;
       matches.push(fromUser);
-      db.collection(USERMATCHES_COLLECTION).updateOne({name:forUser}, {matches:matches}, function(err, doc) {
+      db.collection(USERMATCHES_COLLECTION).update({name:forUser}, {$set: {matches:matches}}, function(err, doc) {
         if (err) {
           handleError(res, err.message, "Failed to add fromUser to forUser");
         }
