@@ -10,6 +10,7 @@ var USERMATCHES_COLLECTION = "userMatches";
 
 var app = express();
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }))
 
 // Create a database variable outside of the database connection callback to reuse the connection pool in your app.
 var db;
