@@ -60,7 +60,7 @@ app.get("/ping/:name", function(req, res) {
         var d = docs[i];
         if (d.name != name){
           var distanceFromUser = Math.sqrt(Math.pow(d.lat-userCoords.lat,2)+Math.pow(d.lng-userCoords.lng,2));
-          if (distanceFromUser < Infinity && closeUsers.indexOf(d.name) > -1){
+          if (distanceFromUser < Infinity && closeUsers.indexOf(d.name) == -1){
             closeUsers.push(d.name);
           }
         }
