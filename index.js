@@ -60,7 +60,7 @@ app.get("/ping/:name", function(req, res) {
         var d = docs[i];
         if (d.name != name){
           var distanceFromUser = Math.sqrt(Math.pow(d.lat-userCoords.lat,2)+Math.pow(d.lng-userCoords.lng,2));
-          if (distanceFromUser < Infinity && closeUsers.indexOf(d.name) == -1){
+          if (distanceFromUser < 1 && closeUsers.indexOf(d.name) == -1){
             closeUsers.push(d.name);
           }
         }
@@ -139,7 +139,13 @@ app.post("/pingback", function(req, res) {
 
 app.post('/users/create/:name',function(req,res) {
   var name = req.params.name;
-  db.collection(ALLCOORDS_COLLECTION).insertOne({name:name,lat:0,lng:0}, function(err, doc) {
+  var lat = 0;
+  var lng = 0;
+  if (name == 'Eli'){
+    lat = 42.0562883;
+    lng = -87.6861951;
+  }
+  db.collection(ALLCOORDS_COLLECTION).insertOne({name:name,lat:lat,lng:lng}, function(err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to make coords.");
     } else {
